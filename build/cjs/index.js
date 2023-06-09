@@ -12,6 +12,7 @@ var __assign = (this && this.__assign) || function () {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var react_native_1 = require("react-native");
+var react_native_2 = require("react-native");
 var bridge = react_native_1.NativeModules.ReactNativeBiometrics;
 /**
  * Enum for touch id sensor type
@@ -25,23 +26,19 @@ exports.FaceID = 'FaceID';
  * Enum for generic biometrics (this is the only value available on android)
  */
 exports.Biometrics = 'Biometrics';
-exports.Fingerprint = 'Fingerprint';
-exports.Credentials = 'Credentials';
 exports.BiometryTypes = {
     TouchID: exports.TouchID,
     FaceID: exports.FaceID,
-    Biometrics: exports.Biometrics,
-    Fingerprint: exports.Fingerprint,
-    Credentials: exports.Credentials
+    Biometrics: exports.Biometrics
 };
 var ReactNativeBiometricsLegacy;
 (function (ReactNativeBiometricsLegacy) {
     /**
-     * Returns promise that resolves to an object with object.biometryType = Biometrics | TouchID | FaceID | Credentials
+     * Returns promise that resolves to an object with object.biometryType = Biometrics | TouchID | FaceID
      * @returns {Promise<Object>} Promise that resolves to an object with details about biometrics available
      */
-    function isSensorAvailable(params) {
-        return new ReactNativeBiometrics().isSensorAvailable(params);
+    function isSensorAvailable() {
+        return new ReactNativeBiometrics().isSensorAvailable();
     }
     ReactNativeBiometricsLegacy.isSensorAvailable = isSensorAvailable;
     /**
@@ -91,7 +88,6 @@ var ReactNativeBiometricsLegacy;
      * @param {Object} simplePromptOptions
      * @param {string} simplePromptOptions.promptMessage
      * @param {string} simplePromptOptions.fallbackPromptMessage
-     * @param {boolean} simplePromptOptions.allowDeviceCredentials
      * @returns {Promise<Object>}  Promise that resolves an object with details about the biometrics result
      */
     function simplePrompt(simplePromptOptions) {
@@ -114,10 +110,9 @@ var ReactNativeBiometrics = /** @class */ (function () {
      * Returns promise that resolves to an object with object.biometryType = Biometrics | TouchID | FaceID
      * @returns {Promise<Object>} Promise that resolves to an object with details about biometrics available
      */
-    ReactNativeBiometrics.prototype.isSensorAvailable = function (params) {
-        var _a, _b;
+    ReactNativeBiometrics.prototype.isSensorAvailable = function () {
         return bridge.isSensorAvailable({
-            allowDeviceCredentials: (_b = (_a = params) === null || _a === void 0 ? void 0 : _a.allowDeviceCredentials, (_b !== null && _b !== void 0 ? _b : this.allowDeviceCredentials))
+            allowDeviceCredentials: this.allowDeviceCredentials
         });
     };
     /**
@@ -166,14 +161,30 @@ var ReactNativeBiometrics = /** @class */ (function () {
      * object.success = false if the user cancels, and rejects if anything fails
      * @param {Object} simplePromptOptions
      * @param {string} simplePromptOptions.promptMessage
+     * @param {boolean} simplePromptOptions.allodDeviceCredentials
      * @param {string} simplePromptOptions.fallbackPromptMessage
      * @returns {Promise<Object>}  Promise that resolves an object with details about the biometrics result
      */
     ReactNativeBiometrics.prototype.simplePrompt = function (simplePromptOptions) {
-        var _a, _b, _c;
+        var _a, _b;
         simplePromptOptions.cancelButtonText = (_a = simplePromptOptions.cancelButtonText, (_a !== null && _a !== void 0 ? _a : 'Cancel'));
         simplePromptOptions.fallbackPromptMessage = (_b = simplePromptOptions.fallbackPromptMessage, (_b !== null && _b !== void 0 ? _b : 'Use Passcode'));
-        return bridge.simplePrompt(__assign({ allowDeviceCredentials: (_c = simplePromptOptions.allowDeviceCredentials, (_c !== null && _c !== void 0 ? _c : this.allowDeviceCredentials)) }, simplePromptOptions));
+        return bridge.simplePrompt(__assign({ allowDeviceCredentials: this.allowDeviceCredentials }, simplePromptOptions));
+    };
+    /**
+     * Prompts user with keyguardAuthentication dialog using the passed in prompt message and
+     * returns promise that resolves to an object with object.success = true if the user passes
+     * and rejects if anything fails
+     * @param {Object} keyguardAuthenticationProps
+     * @param {string} keyguardAuthenticationProps.promptMessage
+     * @param {string} keyguardAuthenticationProps.promptReason
+     * @returns {Promise<Object>}  Promise that resolves an object with details about the biometrics result
+     */
+    ReactNativeBiometrics.prototype.keyguardAuthentication = function (keyguardAuthenticationProps) {
+        if (react_native_2.Platform.OS === 'ios') {
+            return Promise.reject("keyguardAuthentication is not supported on iOS");
+        }
+        return bridge.keyguardAuthentication(keyguardAuthenticationProps);
     };
     return ReactNativeBiometrics;
 }());

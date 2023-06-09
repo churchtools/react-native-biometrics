@@ -1,13 +1,8 @@
 /**
  * Type alias for possible biometry types
  */
-export declare type BiometryTypeIOS = 'TouchID' | 'FaceID';
-export declare type BiometryTypeAndroid = 'Fingerprint' | 'Biometrics' | 'Credentials';
-export declare type BiometryType = BiometryTypeIOS | BiometryTypeAndroid;
+export declare type BiometryType = 'TouchID' | 'FaceID' | 'Biometrics';
 interface RNBiometricsOptions {
-    allowDeviceCredentials?: boolean;
-}
-interface isSensorAvailable {
     allowDeviceCredentials?: boolean;
 }
 interface IsSensorAvailableResult {
@@ -34,11 +29,15 @@ interface CreateSignatureResult {
     signature?: string;
     error?: string;
 }
+interface KeyguardAuthentication {
+    promptMessage: string;
+    promtReason: string;
+}
 interface SimplePromptOptions {
     promptMessage: string;
     fallbackPromptMessage?: string;
-    cancelButtonText?: string;
     allowDeviceCredentials?: boolean;
+    cancelButtonText?: string;
 }
 interface SimplePromptResult {
     success: boolean;
@@ -56,21 +55,17 @@ export declare const FaceID = "FaceID";
  * Enum for generic biometrics (this is the only value available on android)
  */
 export declare const Biometrics = "Biometrics";
-export declare const Fingerprint = "Fingerprint";
-export declare const Credentials = "Credentials";
 export declare const BiometryTypes: {
     TouchID: string;
     FaceID: string;
     Biometrics: string;
-    Fingerprint: string;
-    Credentials: string;
 };
 export declare module ReactNativeBiometricsLegacy {
     /**
-     * Returns promise that resolves to an object with object.biometryType = Biometrics | TouchID | FaceID | Credentials
+     * Returns promise that resolves to an object with object.biometryType = Biometrics | TouchID | FaceID
      * @returns {Promise<Object>} Promise that resolves to an object with details about biometrics available
      */
-    function isSensorAvailable(params: isSensorAvailable): Promise<IsSensorAvailableResult>;
+    function isSensorAvailable(): Promise<IsSensorAvailableResult>;
     /**
      * Creates a public private key pair,returns promise that resolves to
      * an object with object.publicKey, which is the public key of the newly generated key pair
@@ -106,7 +101,6 @@ export declare module ReactNativeBiometricsLegacy {
      * @param {Object} simplePromptOptions
      * @param {string} simplePromptOptions.promptMessage
      * @param {string} simplePromptOptions.fallbackPromptMessage
-     * @param {boolean} simplePromptOptions.allowDeviceCredentials
      * @returns {Promise<Object>}  Promise that resolves an object with details about the biometrics result
      */
     function simplePrompt(simplePromptOptions: SimplePromptOptions): Promise<SimplePromptResult>;
@@ -122,7 +116,7 @@ export default class ReactNativeBiometrics {
      * Returns promise that resolves to an object with object.biometryType = Biometrics | TouchID | FaceID
      * @returns {Promise<Object>} Promise that resolves to an object with details about biometrics available
      */
-    isSensorAvailable(params?: isSensorAvailable): Promise<IsSensorAvailableResult>;
+    isSensorAvailable(): Promise<IsSensorAvailableResult>;
     /**
      * Creates a public private key pair,returns promise that resolves to
      * an object with object.publicKey, which is the public key of the newly generated key pair
@@ -157,9 +151,20 @@ export default class ReactNativeBiometrics {
      * object.success = false if the user cancels, and rejects if anything fails
      * @param {Object} simplePromptOptions
      * @param {string} simplePromptOptions.promptMessage
+     * @param {boolean} simplePromptOptions.allodDeviceCredentials
      * @param {string} simplePromptOptions.fallbackPromptMessage
      * @returns {Promise<Object>}  Promise that resolves an object with details about the biometrics result
      */
     simplePrompt(simplePromptOptions: SimplePromptOptions): Promise<SimplePromptResult>;
+    /**
+     * Prompts user with keyguardAuthentication dialog using the passed in prompt message and
+     * returns promise that resolves to an object with object.success = true if the user passes
+     * and rejects if anything fails
+     * @param {Object} keyguardAuthenticationProps
+     * @param {string} keyguardAuthenticationProps.promptMessage
+     * @param {string} keyguardAuthenticationProps.promptReason
+     * @returns {Promise<Object>}  Promise that resolves an object with details about the biometrics result
+     */
+    keyguardAuthentication(keyguardAuthenticationProps: KeyguardAuthentication): Promise<SimplePromptResult>;
 }
 export {};
