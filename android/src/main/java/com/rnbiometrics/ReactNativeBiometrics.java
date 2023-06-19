@@ -17,6 +17,8 @@ import androidx.biometric.BiometricPrompt.AuthenticationCallback;
 import androidx.biometric.BiometricPrompt.PromptInfo;
 import androidx.fragment.app.FragmentActivity;
 
+import com.facebook.react.bridge.ActivityEventListener;
+import com.facebook.react.bridge.BaseActivityEventListener;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
@@ -47,8 +49,27 @@ public class ReactNativeBiometrics extends ReactContextBaseJavaModule {
 
     protected String biometricKeyAlias = "biometric_key";
 
+    private final ActivityEventListener activityEventListener = new BaseActivityEventListener() {
+        @Override
+        public void onActivityResult(Activity activity, int requestCode, int resultCode, Intent data) {
+            System.out.println("############# onActivityResul ###### " + requestCode);
+
+            if (requestCode == REQUEST_KEYGUARD && keyguardPromise != null) {
+                if (resultCode == RESULT_OK) {
+                    WritableMap resultMap = new WritableNativeMap();
+                    resultMap.putBoolean("success", true);
+                    keyguardPromise.resolve(resultMap);
+                } else {
+                    keyguardPromise.reject("error", "Authentication by Keyguard failed");
+                }
+                keyguardPromise = null;
+            }
+        }
+    };
+
     public ReactNativeBiometrics(ReactApplicationContext reactContext) {
         super(reactContext);
+        reactContext.addActivityEventListener(this.activityEventListener);
     }
 
     @Override
@@ -212,7 +233,7 @@ public class ReactNativeBiometrics extends ReactContextBaseJavaModule {
     }
 
     private int getAllowedAuthenticators(boolean allowDeviceCredentials, boolean ignoreAndroidRestriction) {
-        if (allowDeviceCredentials && ignoreAndroidRestriction){
+        if (allowDeviceCredentials && ignoreAndroidRestriction) {
             return BiometricManager.Authenticators.BIOMETRIC_WEAK | BiometricManager.Authenticators.DEVICE_CREDENTIAL;
         }
         if (allowDeviceCredentials && (!isCurrentSDK29OrEarlier())) {
@@ -269,7 +290,7 @@ public class ReactNativeBiometrics extends ReactContextBaseJavaModule {
     public void keyguardAuthentication(final ReadableMap params, final Promise promise) {
 
 
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP){
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
             WritableMap resultMap = new WritableNativeMap();
             resultMap.putBoolean("success", false);
             resultMap.putString("error", "Needs Lollipop (API 21) or above");
@@ -288,24 +309,6 @@ public class ReactNativeBiometrics extends ReactContextBaseJavaModule {
 
         reactContext.startActivityForResult(keyguardIntent, REQUEST_KEYGUARD, null);
     }
-
-    public void onActivityResult(
-            Activity activity,
-            Integer requestCode,
-            Integer resultCode,
-            Intent data
-    ) {
-        if (requestCode == REQUEST_KEYGUARD && keyguardPromise != null) {
-            if (resultCode == RESULT_OK) {
-                WritableMap resultMap = new WritableNativeMap();
-                resultMap.putBoolean("success", true);
-                keyguardPromise.resolve(resultMap);
-            } else {
-                keyguardPromise.reject("error", "Authentication by Keyguard failed");
-            }
-        }
-    }
-
 
     protected boolean doesBiometricKeyExist() {
         try {
