@@ -44,7 +44,7 @@ interface CreateSignatureResult {
 
 interface KeyguardAuthentication {
     promptMessage: string
-    promtReason: string
+    promptReason: string
 }
 
 interface SimplePromptOptions {
